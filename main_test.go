@@ -47,28 +47,28 @@ func TestReadField(t *testing.T) {
 		n, m     int
 		in       string
 		hasError bool
-		eField   [][]bool
+		eField   [][]byte
 	}{
 		{
 			4, 4, "..*.\n*...\n....\n.**.\n", false,
-			[][]bool{
-				[]bool{false, false, true, false},
-				[]bool{true, false, false, false},
-				[]bool{false, false, false, false},
-				[]bool{false, true, true, false},
+			[][]byte{
+				[]byte{0, 0, Bomb, 0},
+				[]byte{Bomb, 0, 0, 0},
+				[]byte{0, 0, 0, 0},
+				[]byte{0, Bomb, Bomb, 0},
 			},
 		},
 		{
 			4, 4, ".A*.\n*...\n....\n.**.\n", true,
-			[][]bool{},
+			[][]byte{},
 		},
 		{
 			4, 4, "..*.............\n*...\n....\n.**.\n", true,
-			[][]bool{},
+			[][]byte{},
 		},
 		{
 			4, 4, "....\n..*.\n*...\n....\n.**.\n", true,
-			[][]bool{},
+			[][]byte{},
 		},
 	}
 	for i := range tc {
@@ -84,7 +84,7 @@ func TestReadField(t *testing.T) {
 				if field[j][k] != tc[i].eField[j][k] {
 					t.Errorf(
 						"%dx%d '%s' Field [%d][%d] doesnt match: %v != %v",
-						tc[i].n, tc[i].m, j, k, tc[i].eField[j][k], field[j][k],
+						tc[i].n, tc[i].m, tc[i].in, j, k, tc[i].eField[j][k], field[j][k],
 					)
 				}
 			}

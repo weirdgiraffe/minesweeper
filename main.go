@@ -27,10 +27,12 @@ func ReadDimensions(r io.Reader) (n int, m int, err error) {
 	return n, m, nil
 }
 
-func ReadField(r io.Reader, row, col int) (field [][]bool, err error) {
-	field = make([][]bool, row)
+const Bomb = 255
+
+func ReadField(r io.Reader, row, col int) (field [][]byte, err error) {
+	field = make([][]byte, row)
 	for i := 0; i < row; i++ {
-		field[i] = make([]bool, col)
+		field[i] = make([]byte, col)
 	}
 	scanner := bufio.NewScanner(r)
 	i := 0
@@ -46,9 +48,9 @@ func ReadField(r io.Reader, row, col int) (field [][]bool, err error) {
 		for j := range line {
 			switch line[j] {
 			case '.':
-				field[i][j] = false
+				field[i][j] = 0
 			case '*':
-				field[i][j] = true
+				field[i][j] = Bomb
 			default:
 				err = fmt.Errorf("Bad symbol in line '%s'. Only '.' and '*' are allowed", line)
 				return
