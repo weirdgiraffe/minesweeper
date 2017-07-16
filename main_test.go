@@ -31,7 +31,6 @@ func TestReadDimensions(t *testing.T) {
 			if !tc[i].hasError {
 				t.Fatal("'%s' Unexpected error: %v", tc[i].in, err)
 			}
-			t.Log(err)
 			continue
 		}
 		if n != tc[i].en {
@@ -41,4 +40,55 @@ func TestReadDimensions(t *testing.T) {
 			t.Errorf("'%s' Unexpected m: %d != %d", tc[i].in, tc[i].em, m)
 		}
 	}
+}
+
+func TestReadField(t *testing.T) {
+	tc := []struct {
+		n, m     int
+		in       string
+		hasError bool
+		eField   [][]bool
+	}{
+		{
+			4, 4, "..*.\n*...\n....\n.**.\n", false,
+			[][]bool{
+				[]bool{false, false, true, false},
+				[]bool{true, false, false, false},
+				[]bool{false, false, false, false},
+				[]bool{false, true, true, false},
+			},
+		},
+		{
+			4, 4, ".A*.\n*...\n....\n.**.\n", true,
+			[][]bool{},
+		},
+		{
+			4, 4, "..*.............\n*...\n....\n.**.\n", true,
+			[][]bool{},
+		},
+		{
+			4, 4, "....\n..*.\n*...\n....\n.**.\n", true,
+			[][]bool{},
+		},
+	}
+	for i := range tc {
+		field, err := ReadField(strings.NewReader(tc[i].in), tc[i].n, tc[i].m)
+		if err != nil {
+			if !tc[i].hasError {
+				t.Fatal("%dx%d '%s' Unexpected error: %v", tc[i].n, tc[i].m, tc[i].in, err)
+			}
+			continue
+		}
+		for j := range tc[i].eField {
+			for k := range tc[i].eField[i] {
+				if field[j][k] != tc[i].eField[j][k] {
+					t.Errorf(
+						"%dx%d '%s' Field [%d][%d] doesnt match: %v != %v",
+						tc[i].n, tc[i].m, j, k, tc[i].eField[j][k], field[j][k],
+					)
+				}
+			}
+		}
+	}
+
 }
