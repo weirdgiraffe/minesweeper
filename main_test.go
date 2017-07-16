@@ -19,6 +19,11 @@ func TestNewField(t *testing.T) {
 		expectError bool
 	}{
 		{
+			"0 0\n",
+			"",
+			false,
+		},
+		{
 			"4 4\n..*.\n*...\n....\n.**.\n",
 			"12*1\n*211\n2321\n1**1\n",
 			false,

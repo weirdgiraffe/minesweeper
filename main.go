@@ -11,12 +11,34 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"strconv"
+	"os"
 )
 
-func main() {}
+func main() {
+	DoMinesweeper(os.Stdin, os.Stdout)
+}
 
-const Bomb = 255
+func DoMinesweeper(r io.Reader, w io.Writer) (err error) {
+	for i := 0; ; i++ {
+		f := &Field{}
+		err = f.readDimensions(r)
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return
+		}
+		err = f.readCells(r)
+		if err != nil {
+			return
+		}
+		f.Enumerate()
+		fmt.Fprintf(w, "Field #%d:\n%s\n", i, f.String())
+	}
+}
+
+const Bomb = '*'
+const Unknown = '.'
 
 type Field struct {
 	cell       [][]byte
@@ -64,6 +86,9 @@ func (f *Field) Enumerate() {
 			if f.cell[i][j] == Bomb {
 				continue
 			}
+			if f.cell[i][j] == Unknown {
+				f.cell[i][j] = '0'
+			}
 			f.cell[i][j] += f.bombsAround(i, j, false)
 			f.cell[i][j] += f.bombsAround(i-1, j, true)
 			f.cell[i][j] += f.bombsAround(i+1, j, true)
@@ -75,11 +100,7 @@ func (f *Field) String() string {
 	ret := ""
 	for i := 0; i < f.rows; i++ {
 		for j := 0; j < f.cols; j++ {
-			if f.cell[i][j] == Bomb {
-				ret += "*"
-			} else {
-				ret += strconv.Itoa(int(f.cell[i][j]))
-			}
+			ret += string(f.cell[i][j])
 		}
 		ret += "\n"
 	}
@@ -90,6 +111,9 @@ func (f *Field) readDimensions(r io.Reader) (err error) {
 	_, err = fmt.Fscanf(r, "%d %d\n", &f.rows, &f.cols)
 	if err != nil {
 		return
+	}
+	if f.rows == 0 && f.cols == 0 {
+		return io.EOF
 	}
 	if f.rows <= 0 || f.cols > 100 {
 		err = fmt.Errorf("Wrong dimensions: allowed n > 0 and m <= 100")
@@ -116,7 +140,7 @@ func (f *Field) readCells(r io.Reader) (err error) {
 		for j := range line {
 			switch line[j] {
 			case '.':
-				f.cell[i][j] = 0
+				f.cell[i][j] = Unknown
 			case '*':
 				f.cell[i][j] = Bomb
 			default:
