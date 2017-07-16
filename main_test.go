@@ -15,26 +15,49 @@ import (
 func TestNewField(t *testing.T) {
 	tc := []struct {
 		inText      string
+		outText     string
 		expectError bool
 	}{
-		{"4 4\n..*.\n*...\n....\n.**.\n", false},
-		{"-1 4\n..*.\n*...\n....\n.**.\n", true},
-		{"4 101\n..*.\n*...\n....\n.**.\n", true},
-		{"4 4\n..*.\n*...\n.A..\n.**.\n", true},
-		{"4 4\n..*.\n*............\n....\n.**.\n", true},
+		{
+			"4 4\n..*.\n*...\n....\n.**.\n",
+			"12*1\n*211\n2321\n1**1\n",
+			false,
+		},
+		{
+			"-1 4\n..*.\n*...\n....\n.**.\n",
+			"",
+			true,
+		},
+		{
+			"4 101\n..*.\n*...\n....\n.**.\n",
+			"",
+			true,
+		},
+		{
+			"4 4\n..*.\n*...\n.A..\n.**.\n",
+			"",
+			true,
+		},
+		{
+			"4 4\n..*.\n*............\n....\n.**.\n",
+			"",
+			true,
+		},
 	}
 	for i := range tc {
 		field, err := NewField(strings.NewReader(tc[i].inText))
 		if err != nil {
 			if !tc[i].expectError {
-				t.Fatal("'%s' Unexpected error: %v", tc[i].inText, err)
+				t.Fatalf("\n%s Unexpected error: %v", tc[i].inText, err)
 			}
 			continue
 		}
-		if field.String() != tc[i].inText {
-			t.Fatal(
-				"Field not match:\nExpected\n'%s'Have\n'%s'\n",
-				tc[i].inText, field.String(),
+		if field.Enumerate() != tc[i].outText {
+			t.Fatalf(
+				"Field not match:\nInput\n%s\nExpected\n%s\nHave\n%s\n",
+				tc[i].inText,
+				tc[i].outText,
+				field.Enumerate(),
 			)
 		}
 	}

@@ -34,6 +34,10 @@ func NewField(r io.Reader) (*Field, error) {
 	return f, nil
 }
 
+func (f *Field) Enumerate() string {
+	return ""
+}
+
 func (f *Field) String() string {
 	ret := fmt.Sprintf("%d %d\n", len(f.cell), len(f.cell[0]))
 	for i := range f.cell {
