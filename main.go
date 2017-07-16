@@ -15,17 +15,19 @@ import (
 
 func main() {}
 
+const Bomb = 255
+
 type Field struct {
 	cell [][]byte
 }
 
 func NewField(r io.Reader) (*Field, error) {
-	n, m, err := ReadDimensions(r)
+	f := &Field{}
+	err := f.readDimensions(r)
 	if err != nil {
 		return nil, err
 	}
-	f := &Field{}
-	f.cell, err = ReadField(r, n, m)
+	err = f.readCells(r)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +49,8 @@ func (f *Field) String() string {
 	return ret
 }
 
-func ReadDimensions(r io.Reader) (n int, m int, err error) {
+func (f *Field) readDimensions(r io.Reader) (err error) {
+	var n, m int
 	_, err = fmt.Fscanf(r, "%d %d\n", &n, &m)
 	if err != nil {
 		return
@@ -56,47 +59,48 @@ func ReadDimensions(r io.Reader) (n int, m int, err error) {
 		err = fmt.Errorf("Wrong dimensions: allowed n > 0 and m <= 100")
 		return
 	}
-	return n, m, nil
+	f.cell = make([][]byte, n)
+	for i := range f.cell {
+		f.cell[i] = make([]byte, m)
+	}
+	return nil
 }
 
-const Bomb = 255
-
-func ReadField(r io.Reader, row, col int) (field [][]byte, err error) {
-	field = make([][]byte, row)
-	for i := 0; i < row; i++ {
-		field[i] = make([]byte, col)
-	}
+func (f *Field) readCells(r io.Reader) (err error) {
 	scanner := bufio.NewScanner(r)
 	i := 0
-	for scanner.Scan() && i < row {
+	for scanner.Scan() && i < len(f.cell) {
 		line := scanner.Text()
-		if len(line) != col {
-			err = fmt.Errorf(
+		if len(line) != len(f.cell[0]) {
+			return fmt.Errorf(
 				"Bad field line '%s'. Must have exactly %d symbols",
-				line, col,
+				line, len(f.cell[0]),
 			)
-			return
 		}
 		for j := range line {
 			switch line[j] {
 			case '.':
-				field[i][j] = 0
+				f.cell[i][j] = 0
 			case '*':
-				field[i][j] = Bomb
+				f.cell[i][j] = Bomb
 			default:
-				err = fmt.Errorf("Bad symbol in line '%s'. Only '.' and '*' are allowed", line)
-				return
+				return fmt.Errorf(
+					"'%s' Bad symbol %c: '.', '*' are allowed",
+					line, line[j],
+				)
 			}
 		}
 		i++
 	}
 	err = scanner.Err()
 	if err != nil {
-		return
+		return err
 	}
-	if i != row {
-		err = fmt.Errorf("Row count doesn't match format: expected %d, got %d", row, i)
-		return
+	if i != len(f.cell) {
+		return fmt.Errorf(
+			"Row count doesn't match format: expected %d, got %d",
+			len(f.cell), i,
+		)
 	}
-	return field, nil
+	return nil
 }
