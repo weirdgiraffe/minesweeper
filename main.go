@@ -37,6 +37,9 @@ func NewField(r io.Reader) (*Field, error) {
 }
 
 func (f *Field) bombsAround(i, j int, cellInclusive bool) (count byte) {
+	if i < 0 || i >= f.rows {
+		return 0
+	}
 	if j != 0 {
 		if f.cell[i][j-1] == Bomb {
 			count++
@@ -58,17 +61,12 @@ func (f *Field) bombsAround(i, j int, cellInclusive bool) (count byte) {
 func (f *Field) Enumerate() {
 	for i := 0; i < f.rows; i++ {
 		for j := 0; j < f.cols; j++ {
-			cell := &f.cell[i][j]
-			if *cell == Bomb {
+			if f.cell[i][j] == Bomb {
 				continue
 			}
-			*cell += f.bombsAround(i, j, false)
-			if i != 0 {
-				*cell += f.bombsAround(i-1, j, true)
-			}
-			if i != f.rows-1 {
-				*cell += f.bombsAround(i+1, j, true)
-			}
+			f.cell[i][j] += f.bombsAround(i, j, false)
+			f.cell[i][j] += f.bombsAround(i-1, j, true)
+			f.cell[i][j] += f.bombsAround(i+1, j, true)
 		}
 	}
 }
