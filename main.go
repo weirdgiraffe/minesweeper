@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"strconv"
 )
 
 func main() {}
@@ -18,7 +19,8 @@ func main() {}
 const Bomb = 255
 
 type Field struct {
-	cell [][]byte
+	cell       [][]byte
+	rows, cols int
 }
 
 func NewField(r io.Reader) (*Field, error) {
@@ -34,18 +36,68 @@ func NewField(r io.Reader) (*Field, error) {
 	return f, nil
 }
 
-func (f *Field) Enumerate() string {
-	return ""
+func (f *Field) Enumerate() {
+	rows := len(f.cell)
+	cols := len(f.cell[0])
+
+	for i := range f.cell {
+		for j := range f.cell[i] {
+			cell := &f.cell[i][j]
+			if *cell == Bomb {
+				continue
+			}
+			if j != 0 {
+				if f.cell[i][j-1] == Bomb {
+					*cell++
+				}
+			}
+			if j != cols-1 {
+				if f.cell[i][j+1] == Bomb {
+					*cell++
+				}
+			}
+			if i != 0 {
+				if f.cell[i-1][j] == Bomb {
+					*cell++
+				}
+				if j != 0 {
+					if f.cell[i-1][j-1] == Bomb {
+						*cell++
+					}
+				}
+				if j != cols-1 {
+					if f.cell[i-1][j+1] == Bomb {
+						*cell++
+					}
+				}
+			}
+			if i != rows-1 {
+				if f.cell[i+1][j] == Bomb {
+					*cell++
+				}
+				if j != 0 {
+					if f.cell[i+1][j-1] == Bomb {
+						*cell++
+					}
+				}
+				if j != cols-1 {
+					if f.cell[i+1][j+1] == Bomb {
+						*cell++
+					}
+				}
+			}
+		}
+	}
 }
 
 func (f *Field) String() string {
-	ret := fmt.Sprintf("%d %d\n", len(f.cell), len(f.cell[0]))
+	ret := ""
 	for i := range f.cell {
 		for j := range f.cell {
 			if f.cell[i][j] == Bomb {
 				ret += "*"
 			} else {
-				ret += "."
+				ret += strconv.Itoa(int(f.cell[i][j]))
 			}
 		}
 		ret += "\n"

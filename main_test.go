@@ -52,12 +52,13 @@ func TestNewField(t *testing.T) {
 			}
 			continue
 		}
-		if field.Enumerate() != tc[i].outText {
+		field.Enumerate()
+		if field.String() != tc[i].outText {
 			t.Fatalf(
 				"Field not match:\nInput\n%s\nExpected\n%s\nHave\n%s\n",
 				tc[i].inText,
 				tc[i].outText,
-				field.Enumerate(),
+				field.String(),
 			)
 		}
 	}
