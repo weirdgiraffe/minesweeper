@@ -40,6 +40,11 @@ func TestNewField(t *testing.T) {
 			false,
 		},
 		{
+			"4 4\n*...\n....\n.*..\n....\n3 5\n**...\n.....\n.*...\n0 0",
+			"Field #1:\n*100\n2210\n1*10\n1110\n\nField #2:\n**100\n33200\n1*100\n\n",
+			false,
+		},
+		{
 			"-1 4\n..*.\n*...\n....\n.**.\n",
 			"",
 			true,
