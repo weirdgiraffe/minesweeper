@@ -19,7 +19,7 @@ func main() {
 }
 
 func DoMinesweeper(r io.Reader, w io.Writer) (err error) {
-	for i := 0; ; i++ {
+	for i := 1; ; i++ {
 		f := &Field{}
 		err = f.readDimensions(r)
 		if err != nil {
@@ -43,19 +43,6 @@ const Unknown = '.'
 type Field struct {
 	cell       [][]byte
 	rows, cols int
-}
-
-func NewField(r io.Reader) (*Field, error) {
-	f := &Field{}
-	err := f.readDimensions(r)
-	if err != nil {
-		return nil, err
-	}
-	err = f.readCells(r)
-	if err != nil {
-		return nil, err
-	}
-	return f, nil
 }
 
 func (f *Field) bombsAround(i, j int, cellInclusive bool) (count byte) {

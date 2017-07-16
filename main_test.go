@@ -8,6 +8,7 @@
 package main
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 )
@@ -25,17 +26,17 @@ func TestNewField(t *testing.T) {
 		},
 		{
 			"4 4\n..*.\n*...\n....\n.**.\n",
-			"12*1\n*211\n2321\n1**1\n",
+			"Field #1:\n12*1\n*211\n2321\n1**1\n\n",
 			false,
 		},
 		{
 			"4 4\n*...\n....\n.*..\n....\n",
-			"*100\n2210\n1*10\n1110\n",
+			"Field #1:\n*100\n2210\n1*10\n1110\n\n",
 			false,
 		},
 		{
 			"3 5\n**...\n.....\n.*...\n",
-			"**100\n33200\n1*100\n",
+			"Field #1:\n**100\n33200\n1*100\n\n",
 			false,
 		},
 		{
@@ -60,20 +61,21 @@ func TestNewField(t *testing.T) {
 		},
 	}
 	for i := range tc {
-		field, err := NewField(strings.NewReader(tc[i].inText))
+		buf := new(bytes.Buffer)
+		r := strings.NewReader(tc[i].inText)
+		err := DoMinesweeper(r, buf)
 		if err != nil {
 			if !tc[i].expectError {
 				t.Fatalf("\n%s Unexpected error: %v", tc[i].inText, err)
 			}
 			continue
 		}
-		field.Enumerate()
-		if field.String() != tc[i].outText {
+		if buf.String() != tc[i].outText {
 			t.Fatalf(
 				"Field not match:\nInput\n%s\nExpected\n%s\nHave\n%s\n",
 				tc[i].inText,
 				tc[i].outText,
-				field.String(),
+				buf.String(),
 			)
 		}
 	}
