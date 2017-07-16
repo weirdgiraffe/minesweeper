@@ -15,6 +15,38 @@ import (
 
 func main() {}
 
+type Field struct {
+	cell [][]byte
+}
+
+func NewField(r io.Reader) (*Field, error) {
+	n, m, err := ReadDimensions(r)
+	if err != nil {
+		return nil, err
+	}
+	f := &Field{}
+	f.cell, err = ReadField(r, n, m)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+func (f *Field) String() string {
+	ret := fmt.Sprintf("%d %d\n", len(f.cell), len(f.cell[0]))
+	for i := range f.cell {
+		for j := range f.cell {
+			if f.cell[i][j] == Bomb {
+				ret += "*"
+			} else {
+				ret += "."
+			}
+		}
+		ret += "\n"
+	}
+	return ret
+}
+
 func ReadDimensions(r io.Reader) (n int, m int, err error) {
 	_, err = fmt.Fscanf(r, "%d %d\n", &n, &m)
 	if err != nil {
