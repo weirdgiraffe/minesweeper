@@ -37,11 +37,8 @@ func NewField(r io.Reader) (*Field, error) {
 }
 
 func (f *Field) Enumerate() {
-	rows := len(f.cell)
-	cols := len(f.cell[0])
-
-	for i := range f.cell {
-		for j := range f.cell[i] {
+	for i := 0; i < f.rows; i++ {
+		for j := 0; j < f.cols; j++ {
 			cell := &f.cell[i][j]
 			if *cell == Bomb {
 				continue
@@ -51,7 +48,7 @@ func (f *Field) Enumerate() {
 					*cell++
 				}
 			}
-			if j != cols-1 {
+			if j != f.cols-1 {
 				if f.cell[i][j+1] == Bomb {
 					*cell++
 				}
@@ -65,13 +62,13 @@ func (f *Field) Enumerate() {
 						*cell++
 					}
 				}
-				if j != cols-1 {
+				if j != f.cols-1 {
 					if f.cell[i-1][j+1] == Bomb {
 						*cell++
 					}
 				}
 			}
-			if i != rows-1 {
+			if i != f.rows-1 {
 				if f.cell[i+1][j] == Bomb {
 					*cell++
 				}
@@ -80,7 +77,7 @@ func (f *Field) Enumerate() {
 						*cell++
 					}
 				}
-				if j != cols-1 {
+				if j != f.cols-1 {
 					if f.cell[i+1][j+1] == Bomb {
 						*cell++
 					}
@@ -92,8 +89,8 @@ func (f *Field) Enumerate() {
 
 func (f *Field) String() string {
 	ret := ""
-	for i := range f.cell {
-		for j := range f.cell[i] {
+	for i := 0; i < f.rows; i++ {
+		for j := 0; j < f.cols; j++ {
 			if f.cell[i][j] == Bomb {
 				ret += "*"
 			} else {
@@ -106,18 +103,17 @@ func (f *Field) String() string {
 }
 
 func (f *Field) readDimensions(r io.Reader) (err error) {
-	var n, m int
-	_, err = fmt.Fscanf(r, "%d %d\n", &n, &m)
+	_, err = fmt.Fscanf(r, "%d %d\n", &f.rows, &f.cols)
 	if err != nil {
 		return
 	}
-	if n <= 0 || m > 100 {
+	if f.rows <= 0 || f.cols > 100 {
 		err = fmt.Errorf("Wrong dimensions: allowed n > 0 and m <= 100")
 		return
 	}
-	f.cell = make([][]byte, n)
+	f.cell = make([][]byte, f.rows)
 	for i := range f.cell {
-		f.cell[i] = make([]byte, m)
+		f.cell[i] = make([]byte, f.cols)
 	}
 	return nil
 }
@@ -125,12 +121,12 @@ func (f *Field) readDimensions(r io.Reader) (err error) {
 func (f *Field) readCells(r io.Reader) (err error) {
 	scanner := bufio.NewScanner(r)
 	i := 0
-	for scanner.Scan() && i < len(f.cell) {
+	for scanner.Scan() && i < f.rows {
 		line := scanner.Text()
-		if len(line) != len(f.cell[0]) {
+		if len(line) != f.cols {
 			return fmt.Errorf(
 				"Bad field line '%s'. Must have exactly %d symbols",
-				line, len(f.cell[0]),
+				line, f.cols,
 			)
 		}
 		for j := range line {
@@ -152,10 +148,10 @@ func (f *Field) readCells(r io.Reader) (err error) {
 	if err != nil {
 		return err
 	}
-	if i != len(f.cell) {
+	if i != f.rows {
 		return fmt.Errorf(
 			"Row count doesn't match format: expected %d, got %d",
-			len(f.cell), i,
+			f.rows, i,
 		)
 	}
 	return nil
