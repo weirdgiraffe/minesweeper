@@ -9,8 +9,11 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestNewField(t *testing.T) {
@@ -87,4 +90,36 @@ func TestNewField(t *testing.T) {
 			)
 		}
 	}
+}
+
+func randomField() string {
+	f := &Field{}
+	f.rows = int(rand.Uint32() % maxRows)
+	f.cols = int(rand.Uint32() % maxCols)
+	f.cell = make([][]byte, f.rows)
+	for i := range f.cell {
+		f.cell[i] = make([]byte, f.cols)
+		for j := range f.cell[i] {
+			if rand.Uint32()%2 == 0 {
+				f.cell[i][j] = BombCell
+			} else {
+				f.cell[i][j] = SafeCell
+			}
+		}
+	}
+	return fmt.Sprintf("%d %d\n%s0 0\n", f.rows, f.cols, f)
+}
+
+func TestFuzzyMinesweeper(t *testing.T) {
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := 0; i < 1000; i++ {
+		in := randomField()
+		buf := new(bytes.Buffer)
+		r := strings.NewReader(in)
+		err := DoMinesweeper(r, buf)
+		if err != nil {
+			t.Errorf("Input:\n%s\nUnexpected error: %v", in, err)
+		}
+	}
+
 }
