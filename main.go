@@ -16,6 +16,10 @@ import (
 	"os"
 )
 
+const maxRows = 100
+const maxCols = 100
+const maxFields = math.MaxInt32
+
 func main() {
 	flag.Usage = func() {
 		desc := "Minesweeper reads Field with BombCells from stdin,\n" +
@@ -36,23 +40,32 @@ func main() {
 
 // DoMinesweeper reads input from r, find bombs and write results to w
 func DoMinesweeper(r io.Reader, w io.Writer) (err error) {
-	for i := 1; i < math.MaxInt32; i++ {
+	scanner := bufio.NewScanner(r)
+	for i := 1; i < maxFields; i++ {
 		f := &Field{}
-		err = f.readDimensions(r)
+		err = f.readDimensions(scanner)
 		if err != nil {
-			if err == io.EOF {
+			if _, ok := err.(*stopReadingError); ok {
 				return nil
 			}
 			return
 		}
-		err = f.readCells(r)
+		err = f.readCells(scanner)
 		if err != nil {
 			return
 		}
 		f.FindBombs()
 		fmt.Fprintf(w, "Field #%d:\n%s\n", i, f)
 	}
-	return fmt.Errorf("Too many inputs. Minesweeper can process up to %d inputs", math.MaxInt32)
+	return fmt.Errorf("Too many inputs. Minesweeper can process up to %d inputs", maxFields)
+}
+
+// StopReadingError is an error to indicate the end of fields processing
+// Is needed to make difference between io.EOF and end of processing
+type stopReadingError struct{}
+
+func (e stopReadingError) Error() string {
+	return "Minesweeper: stop reading"
 }
 
 const BombCell = '*'
@@ -120,20 +133,27 @@ func (f *Field) String() string {
 }
 
 // readDimensions reads n and m integers from r and check input
-func (f *Field) readDimensions(r io.Reader) (err error) {
-	_, err = fmt.Fscanf(r, "%d %d\n", &f.rows, &f.cols)
+func (f *Field) readDimensions(scanner *bufio.Scanner) (err error) {
+	if scanner.Scan() == false {
+		err = scanner.Err()
+		if err != nil {
+			return
+		}
+		return io.EOF
+	}
+	_, err = fmt.Sscanf(scanner.Text(), "%d %d\n", &f.rows, &f.cols)
 	if err != nil {
 		return
 	}
 	if f.rows == 0 && f.cols == 0 {
-		return io.EOF
+		return &stopReadingError{}
 	}
-	if f.rows < 0 || 100 < f.rows {
-		err = fmt.Errorf("Wrong Field dimensions: allowed 0 < n <= 100")
+	if f.rows < 0 || maxRows < f.rows {
+		err = fmt.Errorf("Wrong Field dimensions: allowed 0 < n <= %d", maxRows)
 		return
 	}
-	if f.cols < 0 || 100 < f.cols {
-		err = fmt.Errorf("Wrong Field dimensions: allowed 0 < m <= 100")
+	if f.cols < 0 || maxCols < f.cols {
+		err = fmt.Errorf("Wrong Field dimensions: allowed 0 < m <= %d", maxCols)
 		return
 	}
 	f.cell = make([][]byte, f.rows)
@@ -144,13 +164,18 @@ func (f *Field) readDimensions(r io.Reader) (err error) {
 }
 
 // readCells reads field cells from r and check input
-func (f *Field) readCells(r io.Reader) (err error) {
+func (f *Field) readCells(scanner *bufio.Scanner) (err error) {
 	if f.rows == 0 && f.cols == 0 {
 		return fmt.Errorf("Must define Field dimensions first")
 	}
-	scanner := bufio.NewScanner(r)
-	i := 0
-	for scanner.Scan() && i < f.rows {
+	for i := 0; i < f.rows; i++ {
+		if scanner.Scan() == false {
+			err = scanner.Err()
+			if err != nil {
+				return err
+			}
+			return io.EOF
+		}
 		line := scanner.Text()
 		if len(line) != f.cols {
 			return fmt.Errorf(
@@ -171,17 +196,6 @@ func (f *Field) readCells(r io.Reader) (err error) {
 				)
 			}
 		}
-		i++
-	}
-	err = scanner.Err()
-	if err != nil {
-		return err
-	}
-	if i != f.rows {
-		return fmt.Errorf(
-			"Row count doesn't match format: expected %d, got %d",
-			f.rows, i,
-		)
 	}
 	return nil
 }
