@@ -36,6 +36,25 @@ func NewField(r io.Reader) (*Field, error) {
 	return f, nil
 }
 
+func (f *Field) bombsAround(i, j int, cellInclusive bool) (count byte) {
+	if j != 0 {
+		if f.cell[i][j-1] == Bomb {
+			count++
+		}
+	}
+	if j != f.cols-1 {
+		if f.cell[i][j+1] == Bomb {
+			count++
+		}
+	}
+	if cellInclusive {
+		if f.cell[i][j] == Bomb {
+			count++
+		}
+	}
+	return count
+}
+
 func (f *Field) Enumerate() {
 	for i := 0; i < f.rows; i++ {
 		for j := 0; j < f.cols; j++ {
@@ -43,45 +62,12 @@ func (f *Field) Enumerate() {
 			if *cell == Bomb {
 				continue
 			}
-			if j != 0 {
-				if f.cell[i][j-1] == Bomb {
-					*cell++
-				}
-			}
-			if j != f.cols-1 {
-				if f.cell[i][j+1] == Bomb {
-					*cell++
-				}
-			}
+			*cell += f.bombsAround(i, j, false)
 			if i != 0 {
-				if f.cell[i-1][j] == Bomb {
-					*cell++
-				}
-				if j != 0 {
-					if f.cell[i-1][j-1] == Bomb {
-						*cell++
-					}
-				}
-				if j != f.cols-1 {
-					if f.cell[i-1][j+1] == Bomb {
-						*cell++
-					}
-				}
+				*cell += f.bombsAround(i-1, j, true)
 			}
 			if i != f.rows-1 {
-				if f.cell[i+1][j] == Bomb {
-					*cell++
-				}
-				if j != 0 {
-					if f.cell[i+1][j-1] == Bomb {
-						*cell++
-					}
-				}
-				if j != f.cols-1 {
-					if f.cell[i+1][j+1] == Bomb {
-						*cell++
-					}
-				}
+				*cell += f.bombsAround(i+1, j, true)
 			}
 		}
 	}
