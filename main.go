@@ -93,7 +93,7 @@ func (f *Field) Enumerate() {
 func (f *Field) String() string {
 	ret := ""
 	for i := range f.cell {
-		for j := range f.cell {
+		for j := range f.cell[i] {
 			if f.cell[i][j] == Bomb {
 				ret += "*"
 			} else {
