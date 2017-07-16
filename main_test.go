@@ -66,16 +66,14 @@ func TestNewField(t *testing.T) {
 		err := DoMinesweeper(r, buf)
 		if err != nil {
 			if !tc[i].expectError {
-				t.Fatalf("\n%s Unexpected error: %v", tc[i].inText, err)
+				t.Fatalf("TestCase #%d\n%s Unexpected error: %v", i, tc[i].inText, err)
 			}
 			continue
 		}
 		if buf.String() != tc[i].outText {
 			t.Fatalf(
-				"Field not match:\nInput\n%s\nExpected\n%s\nHave\n%s\n",
-				tc[i].inText,
-				tc[i].outText,
-				buf.String(),
+				"TestCase #%d Field not match:\nInput\n%s\nExpected\n%s\nHave\n%s\n",
+				i, tc[i].inText, tc[i].outText, buf.String(),
 			)
 		}
 	}
